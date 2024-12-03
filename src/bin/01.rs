@@ -1,6 +1,6 @@
 advent_of_code::solution!(1);
 
-use std::collections::BinaryHeap;
+use std::collections::{self, BinaryHeap};
 
 pub fn part_one(input: &str) -> Option<u32> {
     let mut left = BinaryHeap::new();
@@ -23,8 +23,21 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(sum)
 }
 
+use std::collections::BTreeMap;
+
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut left = BTreeMap::new();
+    let mut right = BTreeMap::new();
+    for line in input.lines() {
+        let (l, r): (u32, u32) = {
+            let mut it = line.split_ascii_whitespace();
+            (it.next()?.parse().ok()?, it.next()?.parse().ok()?)
+        };
+        left.entry(l).and_modify(|v| *v += 1).or_insert(1);
+        right.entry(r).and_modify(|v| *v += 1).or_insert(1);
+    }
+    let similarity = left.into_iter().map(|(n, c)| right.get(&n).unwrap_or(&0) * n * c).sum();
+    Some(similarity)
 }
 
 #[cfg(test)]
@@ -40,6 +53,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(31));
     }
 }
