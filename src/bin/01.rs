@@ -36,7 +36,10 @@ pub fn part_two(input: &str) -> Option<u32> {
         left.entry(l).and_modify(|v| *v += 1).or_insert(1);
         right.entry(r).and_modify(|v| *v += 1).or_insert(1);
     }
-    let similarity = left.into_iter().map(|(n, c)| right.get(&n).unwrap_or(&0) * n * c).sum();
+    let similarity = left
+        .into_iter()
+        .map(|(n, c)| right.get(&n).unwrap_or(&0) * n * c)
+        .sum();
     Some(similarity)
 }
 
