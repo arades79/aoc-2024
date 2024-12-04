@@ -11,9 +11,37 @@ impl Mul {
     }
 }
 
+enum Exec {
+    Do,
+    Dont,
+}
+
+enum Cmd {
+    Mul(Mul),
+    Exec(Exec),
+}
+
+fn exdo(input: &mut &str) -> PResult<Exec> {
+    ("do()").parse_next(input)?;
+    Ok(Exec::Do)
+}
+
+fn dont(input: &mut &str) -> PResult<Exec> {
+    ("don't()").parse_next(input)?;
+    Ok(Exec::Dont)
+}
+
+fn ex(input: &mut &str) -> PResult<Exec> {
+    alt((exdo, dont)).parse_next(input)
+}
+
 fn mul(input: &mut &str) -> PResult<Mul> {
    let (v1,v2) = preceded("mul", delimited('(', separated_pair(dec_int,',',dec_int), ')')).parse_next(input)?;
    Ok(Mul(v1,v2))
+}
+
+fn cmd(input: &mut &str) -> PResult<Cmd> {
+    alt(((ex.map(Cmd::Exec)), mul.map(Cmd::Mul))).parse_next(input)
 }
 
 fn mul_garbo(input: &mut &str) -> PResult<Mul> {
@@ -32,14 +60,35 @@ fn mul_through_garbage(input:&mut &str) -> PResult<Vec<Mul>> {
     Ok(mulls)
 }
 
+fn mul_through_garbage_with_dos(input:&mut &str) -> PResult<Vec<Cmd>> {
+    let mut cmds = Vec::new();
+    while input.len() > 0 {
+       match cmd.parse_next(input) {
+        Ok(m) => cmds.push(m),
+        Err(_) => {take::<_,_,()>(1u32).parse_next(input).ok();}
+       }
+    }
+    Ok(cmds)
+}
+
 pub fn part_one(input: &str) -> Option<i64> {
     let muls = mul_through_garbage.parse(input).ok()?;
     let sum = muls.into_iter().map(Mul::eval).sum();
     Some(sum)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<i64> {
+    let cmds = mul_through_garbage_with_dos.parse(input).ok()?;
+    let mut doing: bool = true;
+    let mut sum = 0;
+    for cmd in cmds {
+        match cmd {
+            Cmd::Mul(mul) => if doing {sum += mul.eval()},
+            Cmd::Exec(Exec::Do) => doing = true,
+            Cmd::Exec(Exec::Dont) => doing = false,
+        }
+    }
+    Some(sum)
 }
 
 #[cfg(test)]
@@ -67,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        let result = part_two(&advent_of_code::template::read_file_part("examples", DAY, 2));
+        assert_eq!(result, Some(48));
     }
 }
