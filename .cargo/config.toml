@@ -10,3 +10,10 @@ time = "run --quiet --release -- time"
 
 [env]
 AOC_YEAR = "2024"
+
+[profile.release]
+lto = "thin"
+panic = "abort"
+codegen-units = 1
+strip = true
+opt-level = 3
