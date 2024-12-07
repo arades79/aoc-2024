@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
-use rayon::spawn;
+use tokio::task::JoinSet;
 
-use std::sync::atomic::AtomicU32 as Au32;
 
 advent_of_code::solution!(6);
 
@@ -150,15 +149,15 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(traversed)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    static LOOPS: Au32 = Au32::new(0);
+#[tokio::main]
+pub async fn part_two(input: &str) -> Option<u32> {
     let initial_map = parse_map(input);
     let initial_guard = find_guard(&initial_map)?;
     let mut map = initial_map.clone();
     let mut guard = initial_guard;
     let mut obstructed_locations = HashSet::new();
     let mut guard_states = HashSet::new();
-    rayon::scope(|spawner| {
+    let mut tasks = JoinSet::new();
         while let Some(new_guard) = iterate_map(&mut map, guard) {
             guard_states.insert(guard);
             if !obstructed_locations.contains(&new_guard.position) {
@@ -167,18 +166,16 @@ pub fn part_two(input: &str) -> Option<u32> {
                     let mut alt_map = map.clone();
                     alt_map[guard.position.1][guard.position.0] = Tile::Guard(guard.direction);
                     alt_map[new_guard.position.1][new_guard.position.0] = Tile::Obstacle;
-                    spawner.spawn(move |_| {
-                        if detect_loop(&mut alt_map, guard, alt_guard_states) {
-                            LOOPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                        }
-                    })
+                    tasks.spawn_blocking(move || {
+                        detect_loop(&mut alt_map, guard, alt_guard_states) as u32
+                    });
                 }
                 obstructed_locations.insert(new_guard.position);
             }
             guard = new_guard;
         }
-    });
-    Some(LOOPS.load(std::sync::atomic::Ordering::Relaxed))
+    let loops = tasks.join_all().await.into_iter().sum();
+    Some(loops)
 }
 
 #[cfg(test)]
