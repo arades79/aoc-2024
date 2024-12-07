@@ -1,6 +1,8 @@
-use std::{collections::HashSet, ops::Deref};
+use std::collections::HashSet;
 
-use itertools::Itertools;
+use rayon::spawn;
+
+use std::sync::atomic::AtomicU32 as Au32;
 
 advent_of_code::solution!(6);
 
@@ -36,7 +38,7 @@ impl Default for Tile {
     }
 }
 
-#[derive(Debug,Clone, Copy,PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Guard {
     position: (usize, usize),
     direction: Direction,
@@ -50,15 +52,6 @@ impl Guard {
             Direction::Right => Some((x + 1, y)),
             Direction::Down => Some((x, y + 1)),
             Direction::Up => Some((x, y.checked_sub(1)?)),
-        }
-    }
-    fn previous_pos(&self) -> Option<(usize, usize)> {
-        let (x, y) = self.position;
-        match self.direction {
-            Direction::Right => Some((x.checked_sub(1)?, y)),
-            Direction::Left => Some((x + 1, y)),
-            Direction::Up => Some((x, y + 1)),
-            Direction::Down => Some((x, y.checked_sub(1)?)),
         }
     }
     fn rotate(&mut self) {
@@ -129,11 +122,12 @@ fn iterate_map(map: &mut Map, mut guard: Guard) -> Option<Guard> {
     })
 }
 
-fn detect_loop(map: &mut Map, mut guard: Guard) -> bool {
-    let mut guard_states = HashSet::new();
+fn detect_loop(map: &mut Map, mut guard: Guard, mut guard_states: HashSet<Guard>) -> bool {
     guard_states.insert(guard);
     while let Some(new_guard) = iterate_map(map, guard) {
-        if guard_states.contains(&new_guard) {return true}
+        if guard_states.contains(&new_guard) {
+            return true;
+        }
         guard = new_guard;
         guard_states.insert(guard);
     }
@@ -153,34 +147,38 @@ pub fn part_one(input: &str) -> Option<u32> {
             traversed
         }
     });
-    let tiles = map[0].len() * map.len();
-    println!("guard traversed {traversed} out of {tiles} tiles");
     Some(traversed)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
+    static LOOPS: Au32 = Au32::new(0);
     let initial_map = parse_map(input);
     let initial_guard = find_guard(&initial_map)?;
-    let traversed_tiles = {
-        let mut map = initial_map.clone();
-        let mut guard = initial_guard;
-        let mut traverse_locations = HashSet::new();
+    let mut map = initial_map.clone();
+    let mut guard = initial_guard;
+    let mut obstructed_locations = HashSet::new();
+    let mut guard_states = HashSet::new();
+    rayon::scope(|spawner| {
         while let Some(new_guard) = iterate_map(&mut map, guard) {
+            guard_states.insert(guard);
+            if !obstructed_locations.contains(&new_guard.position) {
+                {
+                    let alt_guard_states = guard_states.clone();
+                    let mut alt_map = map.clone();
+                    alt_map[guard.position.1][guard.position.0] = Tile::Guard(guard.direction);
+                    alt_map[new_guard.position.1][new_guard.position.0] = Tile::Obstacle;
+                    spawner.spawn(move |_| {
+                        if detect_loop(&mut alt_map, guard, alt_guard_states) {
+                            LOOPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        }
+                    })
+                }
+                obstructed_locations.insert(new_guard.position);
+            }
             guard = new_guard;
-            traverse_locations.insert(guard.position);
         }
-        traverse_locations
-    };
-    let mut loops = 0;
-    for traversed in traversed_tiles {
-        let mut map = initial_map.clone();
-        map[traversed.1][traversed.0] = Tile::Obstacle;
-        if detect_loop(&mut map, initial_guard) {
-        loops += 1;
-        println!("loop created by placing obstical at {traversed:?}");
-        }
-    }
-    Some(loops)
+    });
+    Some(LOOPS.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 #[cfg(test)]
