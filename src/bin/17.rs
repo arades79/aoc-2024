@@ -1,8 +1,11 @@
+use itertools::Itertools;
 use winnow::{
     ascii::{dec_uint, multispace1},
     combinator::{preceded, separated, separated_pair},
     prelude::*,
 };
+
+use rayon::prelude::*;
 
 advent_of_code::solution!(17);
 
@@ -126,10 +129,29 @@ impl From<u64> for Register {
     }
 }
 
+impl From<Register> for u8 {
+    fn from(value: Register) -> Self {
+        match value {
+            Register::A => 4,
+            Register::B => 5,
+            Register::C => 6,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum Combo {
     Immediate(Literal),
     Register(Register),
+}
+
+impl From<Combo> for u8 {
+    fn from(value: Combo) -> Self {
+        match value {
+            Combo::Immediate(literal) => literal.0 as u8,
+            Combo::Register(register) => register.into(),
+        }
+    }
 }
 
 impl From<u64> for Combo {
@@ -154,6 +176,21 @@ enum Operation {
     Cdv(Combo),
 }
 
+impl Operation {
+    fn to_bytes(self) -> [u8; 2] {
+        match self {
+            Operation::Adv(combo) => [0, combo.into()],
+            Operation::Bxl(Literal(literal)) => [1, literal as u8],
+            Operation::Bst(combo) => [2, combo.into()],
+            Operation::Jnz(Literal(literal)) => [3, literal as u8],
+            Operation::Bxc(Literal(literal)) => [4, literal as u8],
+            Operation::Out(combo) => [5, combo.into()],
+            Operation::Bdv(combo) => [6, combo.into()],
+            Operation::Cdv(combo) => [7, combo.into()],
+        }
+    }
+}
+
 impl From<(u64, u64)> for Operation {
     fn from(value: (u64, u64)) -> Self {
         use Operation::*;
@@ -167,6 +204,21 @@ impl From<(u64, u64)> for Operation {
             (6, c @ 0..8) => Bdv(Combo::from(c)),
             (7, c @ 0..8) => Cdv(Combo::from(c)),
             (op, sub) => panic!("Illegal operation {op} or operand {sub}"),
+        }
+    }
+}
+
+impl From<Operation> for [u8; 2] {
+    fn from(value: Operation) -> Self {
+        match value {
+            Operation::Adv(combo) => [0, combo.into()],
+            Operation::Bxl(Literal(literal)) => [1, literal as u8],
+            Operation::Bst(combo) => [2, combo.into()],
+            Operation::Jnz(Literal(literal)) => [3, literal as u8],
+            Operation::Bxc(Literal(literal)) => [4, literal as u8],
+            Operation::Out(combo) => [5, combo.into()],
+            Operation::Bdv(combo) => [6, combo.into()],
+            Operation::Cdv(combo) => [7, combo.into()],
         }
     }
 }
@@ -193,8 +245,7 @@ fn computer_parser(input: &mut &str) -> PResult<Computer> {
     Ok(Computer::new(a, b, c, program))
 }
 
-fn hardcoded() {
-    let mut a = 47792830;
+fn hardcoded(mut a: u64) -> Box<[u8]> {
     let mut b = 0;
     let mut c = 0;
     let mut out = Vec::new();
@@ -204,20 +255,48 @@ fn hardcoded() {
         c = a / (1 << b);
         b ^= 6;
         b ^= c;
-        out.push(b % 8);
+        out.push((b % 8) as u8);
         a /= 8;
     }
-    println!("hardcoded: {out:?}");
+    out.into_boxed_slice()
 }
 
 pub fn part_one(input: &str) -> Option<String> {
     let computer = computer_parser.parse(input).ok()?;
+    #[cfg(test)]
     let out = computer.execute();
-    hardcoded();
+    #[cfg(not(test))]
+    let out = {
+        let mut out = String::new();
+        for v in hardcoded(computer.a) {
+            out.push(char::from_digit(v.into(), 10).unwrap());
+            out.push(',');
+        }
+        out.pop();
+        out
+    };
     Some(out)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<u64> {
+    let Computer { instructions, .. } = computer_parser.parse(input).ok()?;
+    let instructions: Box<[u8]> = instructions
+        .iter()
+        .flat_map(|ins| ins.to_bytes())
+        .collect::<Vec<u8>>()
+        .into_boxed_slice();
+    let mut a = 8u64.pow(instructions.len() as u32 - 1);
+    'checka: while a < 8u64.pow(instructions.len() as u32) {
+        let out = hardcoded(a);
+        println!("{a}: {out:?}");
+        for i in (0..instructions.len()).rev() {
+            if instructions[i] != out[i] {
+                a += 1 << (i * 3);
+                continue 'checka;
+            }
+        }
+        return Some(a);
+    }
     None
 }
 
@@ -234,6 +313,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(105568));
     }
 }
