@@ -178,7 +178,7 @@ fn print_keycode(keycode: &str, keys: &[DirKey]) {
         };
         print!("{c}");
     }
-    println!("");
+    println!();
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
