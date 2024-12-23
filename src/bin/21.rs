@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::once};
 
 use itertools::Itertools;
 
 advent_of_code::solution!(21);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum KeyPadKey {
     A,
     Zero,
@@ -19,7 +19,7 @@ enum KeyPadKey {
     Nine,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum DirKey {
     Up,
     Down,
@@ -44,11 +44,11 @@ impl DirKey {
         let mut keys = match (self, other) {
             (Up, Down) => vec![Down],
             (Up, Left) => vec![Down, Left],
-            (Up, Right) => vec![Right, Down],
+            (Up, Right) => vec![Down, Right],
             (Up, Push) => vec![Right],
             (Down, Left) => vec![Left],
             (Down, Right) => vec![Right],
-            (Down, Push) => vec![Right, Up],
+            (Down, Push) => vec![Up, Right],
             (Left, Right) => vec![Right, Right],
             (Left, Push) => vec![Right, Right, Up],
             (Right, Push) => vec![Up],
@@ -119,7 +119,7 @@ impl KeyPadKey {
             (Five, Six) => vec![Right],
             (Five, Seven) => vec![Left, Up],
             (Five, Eight) => vec![Up],
-            (Five, Nine) => vec![Right, Up],
+            (Five, Nine) => vec![Up, Right],
             (Six, Seven) => vec![Left, Left, Up],
             (Six, Eight) => vec![Left, Up],
             (Six, Nine) => vec![Up],
@@ -207,27 +207,46 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(complexity_scores)
 }
 
+fn robot_sequence_len(
+    sequence: Vec<DirKey>,
+    depth: u8,
+    cache: &mut HashMap<(Vec<DirKey>, u8), usize>,
+) -> usize {
+    if let Some(length) = cache.get(&(sequence.clone(), depth)) {
+        return *length;
+    }
+
+    let mut length = 0;
+    if depth == 0 {
+        length = sequence.len();
+    } else {
+        let mut key = DirKey::Push;
+        for next in sequence.iter() {
+            length += {
+                if key == *next {
+                    1
+                } else {
+                    robot_sequence_len(key.navigate(*next), depth - 1, cache)
+                }
+            };
+            key = *next;
+        }
+    }
+
+    cache.insert((sequence, depth), length);
+    length
+}
+
 pub fn part_two(input: &str) -> Option<usize> {
     let mut complexity_scores = 0;
     for line in input.lines() {
         let (keys, num) = combo_from_string(line);
         // robots start pointing at A, it's not pressed, but used for navigation
-        let mut robot_1_keys = vec![DirKey::Push];
-        robot_1_keys.extend(keys.windows(2).flat_map(|key| key[0].navigate(key[1])));
-        for _ in 0..24 {
-            let mut robot_2_keys = vec![DirKey::Push];
-            robot_2_keys.extend(
-                robot_1_keys
-                    .windows(2)
-                    .flat_map(|key| key[0].navigate(key[1])),
-            );
-            robot_1_keys = robot_2_keys;
-        }
-        let keypresses = robot_1_keys
-            .into_iter()
-            .tuple_windows()
-            .flat_map(|(key1, key2)| key1.navigate(key2))
-            .count();
+        let robot_1_keys = keys
+            .windows(2)
+            .flat_map(|key| key[0].navigate(key[1]))
+            .collect();
+        let keypresses = robot_sequence_len(robot_1_keys, 25, &mut HashMap::new());
         let complexity = keypresses * num;
         complexity_scores += complexity;
     }
@@ -247,6 +266,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(154115708116294));
     }
 }
