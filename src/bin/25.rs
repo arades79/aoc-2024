@@ -70,8 +70,8 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(working_combos)
 }
 
-pub fn part_two(_input: &str) -> Option<()> {
-    Some(())
+pub fn part_two(_input: &str) -> Option<u32> {
+    Some(0)
 }
 
 #[cfg(test)]
@@ -87,6 +87,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(()));
+        assert_eq!(result, Some(0));
     }
 }

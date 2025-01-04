@@ -199,6 +199,9 @@ pub fn part_two(input: &str) -> Option<String> {
     #[cfg(test)]
     const BITS: u64 = 6;
     const MAX: u64 = (2 << BITS) - 1;
+    #[cfg(test)]
+    let expected_output = check_nets(&wires, 'x')? & check_nets(&wires, 'y')?;
+    #[cfg(not(test))]
     let expected_output = (check_nets(&wires, 'x')? + check_nets(&wires, 'y')?) % MAX;
     println!("expecting {expected_output}");
     #[cfg(test)]
@@ -220,6 +223,7 @@ pub fn part_two(input: &str) -> Option<String> {
                 return Some(
                     oct.into_iter()
                         .map(|index| gates[index].output.id)
+                        .sorted()
                         .join(","),
                 );
             }
