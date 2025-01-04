@@ -124,7 +124,7 @@ impl Cross {
             }
             _ => return None,
         };
-        return Some(Cross(x, y));
+        Some(Cross(x, y))
     }
 }
 
@@ -132,7 +132,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut crosses = vec![];
     let mat: Vec<&[u8]> = input.lines().map(str::as_bytes).collect();
     for (y, line) in input.lines().enumerate() {
-        for (x, _) in line.as_bytes().into_iter().enumerate() {
+        for (x, _) in line.as_bytes().iter().enumerate() {
             if let Some(cross) = Cross::from_mat(x as u32, y as u32, &mat) {
                 crosses.push(cross)
             }

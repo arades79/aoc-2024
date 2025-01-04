@@ -18,7 +18,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     let sum = left
         .iter()
         .zip(right.iter())
-        .map(|(l, r)| (l - r).abs() as u32)
+        .map(|(l, r)| (l - r).unsigned_abs())
         .sum();
     Some(sum)
 }

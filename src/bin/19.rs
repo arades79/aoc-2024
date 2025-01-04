@@ -8,7 +8,7 @@ fn successors(
     available_towels: &[&str],
 ) -> Vec<(String, String)> {
     let mut next_towels = Vec::new();
-    for towel in available_towels.into_iter().copied() {
+    for towel in available_towels.iter().copied() {
         if let Some(new_remaining) = remaining_towels.strip_prefix(towel) {
             let new_current = format!("{current_towels}{towel}");
             next_towels.push((new_current, new_remaining.to_owned()));

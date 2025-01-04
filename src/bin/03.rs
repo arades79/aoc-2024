@@ -51,7 +51,7 @@ fn mul_garbo(input: &mut &str) -> PResult<Mul> {
 
 fn mul_through_garbage(input:&mut &str) -> PResult<Vec<Mul>> {
     let mut mulls = Vec::new();
-    while input.len() > 0 {
+    while !input.is_empty() {
        match mul.parse_next(input) {
         Ok(m) => mulls.push(m),
         Err(_) => {take::<_,_,()>(1u32).parse_next(input).ok();}
@@ -62,7 +62,7 @@ fn mul_through_garbage(input:&mut &str) -> PResult<Vec<Mul>> {
 
 fn mul_through_garbage_with_dos(input:&mut &str) -> PResult<Vec<Cmd>> {
     let mut cmds = Vec::new();
-    while input.len() > 0 {
+    while !input.is_empty() {
        match cmd.parse_next(input) {
         Ok(m) => cmds.push(m),
         Err(_) => {take::<_,_,()>(1u32).parse_next(input).ok();}
