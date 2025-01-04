@@ -1,6 +1,6 @@
 advent_of_code::solution!(3);
 
-use winnow::{ascii::dec_int, combinator::{alt, delimited, opt, preceded, repeat, separated, separated_pair, terminated}, prelude::*, token::{any, take, take_till, take_until}};
+use winnow::{ascii::dec_int, combinator::{alt, delimited, opt, preceded, separated_pair}, prelude::*, token::{any, take}};
 
 #[derive(Debug,PartialEq, Eq, PartialOrd, Ord)]
 struct Mul(i32,i32);

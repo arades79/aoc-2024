@@ -1,6 +1,4 @@
-use std::{collections::HashSet, io::Write};
-
-use itertools::Itertools;
+use std::collections::HashSet;
 
 advent_of_code::solution!(15);
 
@@ -35,7 +33,7 @@ impl Tile {
             _ => None,
         }
     }
-    const fn to_c(&self) -> char {
+    const fn to_c(self) -> char {
         match self {
             Tile::Wall => '#',
             Tile::Empty => '.',
@@ -251,6 +249,8 @@ fn gps_total(map: &Map) -> u32 {
 
 #[cfg(test)]
 fn render(map: Map) {
+    use std::io::Write;
+
     let mut s = String::new();
     for row in map {
         for t in row {
@@ -266,7 +266,7 @@ fn render(map: Map) {
 }
 
 #[cfg(not(test))]
-fn render(map: Map) {}
+fn render(_map: Map) {}
 
 fn cleanup(map: &mut Map) {
     for row in map {

@@ -1,11 +1,11 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashSet};
 
 use itertools::Itertools;
 
 advent_of_code::solution!(23);
 
 fn parse_connections(input: &str) -> Vec<(&str, &str)> {
-    let mut connections: Vec<(&str, &str)> = input
+    let connections: Vec<(&str, &str)> = input
         .lines()
         .map(|line| line.split_once('-').unwrap())
         .collect();

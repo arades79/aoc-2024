@@ -28,7 +28,7 @@ impl LocKey {
     }
 }
 
-fn parse_lockey(input: &str) -> (LocKey) {
+fn parse_lockey(input: &str) -> LocKey {
     let mut arr = [0; TUMBLERS];
     for line in input.lines().map(str::as_bytes) {
         assert_eq!(

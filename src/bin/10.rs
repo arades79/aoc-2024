@@ -1,6 +1,6 @@
 advent_of_code::solution!(10);
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use rayon::prelude::*;
 

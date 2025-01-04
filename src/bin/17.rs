@@ -1,11 +1,9 @@
-use itertools::Itertools;
+#![allow(dead_code)]
 use winnow::{
     ascii::{dec_uint, multispace1},
     combinator::{preceded, separated, separated_pair},
     prelude::*,
 };
-
-use rayon::prelude::*;
 
 advent_of_code::solution!(17);
 
@@ -246,8 +244,8 @@ fn computer_parser(input: &mut &str) -> PResult<Computer> {
 }
 
 fn hardcoded(mut a: u64) -> Box<[u8]> {
-    let mut b = 0;
-    let mut c = 0;
+    let mut b;
+    let mut c;
     let mut out = Vec::new();
     while a > 0 {
         b = a % 8;

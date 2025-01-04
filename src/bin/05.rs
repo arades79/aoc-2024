@@ -1,5 +1,5 @@
 use std::{
-    cmp::Ordering, ops::{Deref, DerefMut}, str::FromStr
+    cmp::Ordering, ops::{Deref, DerefMut}
 };
 
 advent_of_code::solution!(5);
@@ -10,7 +10,7 @@ use winnow::{
     prelude::*,
 };
 
-use itertools::{Itertools, Permutations, Unique};
+use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Rule(u32, u32);

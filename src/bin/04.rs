@@ -1,4 +1,3 @@
-use std::ops::{AddAssign, Index};
 
 advent_of_code::solution!(4);
 

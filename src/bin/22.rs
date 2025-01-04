@@ -52,7 +52,7 @@ pub fn part_two(input: &str) -> Option<u64> {
                 let bananas = sequence[i + 4];
                 banana_sequences
                     .entry(quad.to_vec())
-                    .and_modify(|b| *b += (bananas as u64))
+                    .and_modify(|b| *b += bananas as u64)
                     .or_insert(bananas as u64);
             }
         });

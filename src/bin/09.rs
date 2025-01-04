@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, Index};
+use std::ops::AddAssign;
 
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 

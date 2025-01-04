@@ -4,7 +4,6 @@ use std::{
     sync::OnceLock,
 };
 
-use gcd::Gcd;
 use itertools::Itertools;
 
 advent_of_code::solution!(8);

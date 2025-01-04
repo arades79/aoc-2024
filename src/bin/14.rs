@@ -7,7 +7,6 @@ use winnow::{
     prelude::*,
 };
 
-use csv::Writer;
 use image::{save_buffer, ExtendedColorType};
 
 #[cfg(test)]

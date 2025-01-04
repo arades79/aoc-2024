@@ -1,6 +1,6 @@
 advent_of_code::solution!(1);
 
-use std::collections::{self, BinaryHeap};
+use std::collections::{BinaryHeap};
 
 pub fn part_one(input: &str) -> Option<u32> {
     let mut left = BinaryHeap::new();

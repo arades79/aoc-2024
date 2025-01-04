@@ -1,8 +1,5 @@
 use itertools::Itertools;
-use std::{
-    collections::{HashMap, HashSet},
-    hash::Hash,
-};
+use std::{collections::HashSet, hash::Hash};
 use winnow::{
     ascii::{alphanumeric1, dec_uint},
     combinator::{alt, preceded, separated_pair},
@@ -87,18 +84,6 @@ impl<'a> Gate<'a> {
 
     fn swap_outs(&mut self, other: &mut Self) {
         std::mem::swap(&mut self.output, &mut other.output);
-    }
-
-    fn is_adder_element(&self) -> bool {
-        match self.op {
-            Op::Or => todo!(),
-            Op::And => todo!(),
-            Op::Xor => {
-                (self.inputs.0.id.starts_with('x') && self.inputs.1.id.starts_with('y'))
-                    || (self.inputs.0.id.starts_with('y') && self.inputs.1.id.starts_with('x'))
-                    || self.output.id.starts_with('z')
-            }
-        }
     }
 }
 
@@ -196,8 +181,7 @@ pub fn part_two(input: &str) -> Option<String> {
     let (wires, gates) = parse_nets(input)?;
     #[cfg(not(test))]
     const BITS: u64 = 46;
-    #[cfg(test)]
-    const BITS: u64 = 6;
+    #[cfg(not(test))]
     const MAX: u64 = (2 << BITS) - 1;
     #[cfg(test)]
     let expected_output = check_nets(&wires, 'x')? & check_nets(&wires, 'y')?;
