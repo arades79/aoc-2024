@@ -294,7 +294,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    std::fs::File::create("robots/lantern.txt").ok()?;
+    std::fs::File::create("robots/lantern.txt").ok();
     let (mut map, dirs) = parse_input2(input)?;
     let mut robot = find_robot(&map)?;
     for direction in dirs {
