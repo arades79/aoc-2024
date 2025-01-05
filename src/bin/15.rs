@@ -258,10 +258,12 @@ fn render(map: Map) {
         }
         s.push('\n');
     }
-    let mut f = std::fs::OpenOptions::new()
+    let Ok(mut f) = std::fs::OpenOptions::new()
         .append(true)
         .open("robots/lantern.txt")
-        .unwrap();
+    else {
+        return;
+    };
     f.write_all(s.as_bytes()).unwrap();
 }
 
